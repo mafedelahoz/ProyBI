@@ -1,15 +1,25 @@
-import pickle
-import numpy as np
+import joblib
+import pandas as pd
+from sklearn.pipeline import Pipeline
+from Classes import ToDataFrame, ProcessText, Tokenization, Lemmatization, StopWordDeletion, SpecialCharacterFilter, FinalText, Predictions
 
-# Load the pipeline that includes preprocessing and prediction model
-def load_pipeline(pipeline_path="pipeline_model.pkl"):
-    with open(pipeline_path, 'rb') as f:
-        pipeline = pickle.load(f)
+# Modify this function to accept the file path as an argument
+def create_pipeline(file_path):
+    to_dataframe_transformer = ToDataFrame(file_path=file_path)
+
+    loaded_vectorizer = joblib.load('tfidf_vectorizer.pkl')
+    loaded_model = joblib.load('model.pkl')
+
+    # Create your pipeline as before, using the file path provided
+    pipeline = Pipeline([
+        ("crear_dataframe", to_dataframe_transformer),
+        ("procesamiento_texto", ProcessText(column="Textos_espanol")),
+        ("tokenizacion", Tokenization(column='procesado')),
+        ("lematizacion", Lemmatization(column='procesado')),
+        ("eliminar_stopwords", StopWordDeletion(column='procesado')),
+        ("eliminacion_no_alfabetico", SpecialCharacterFilter(column='lemmas_sin_stopwords')),
+        ("texto_final", FinalText(column='lemmas_limpios')),
+        ("classifier", Predictions(model=loaded_model, vectorizer=loaded_vectorizer))
+    ])
+
     return pipeline
-
-# Use the pipeline to make predictions
-def predict(data, pipeline):
-    # Assuming data is a list of input features
-    data = np.array(data).reshape(1, -1)
-    prediction = pipeline.predict(data)  # Use the entire pipeline to predict
-    return prediction
