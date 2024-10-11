@@ -2,7 +2,6 @@ import spacy
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split, KFold, GridSearchCV
 from sklearn.metrics import classification_report, ConfusionMatrixDisplay, confusion_matrix, accuracy_score, recall_score, precision_score, f1_score
-import matplotlib.pyplot as plt
 from sklearn import tree
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
@@ -11,6 +10,8 @@ from sklearn.preprocessing import  OneHotEncoder
 from sklearn.base import BaseEstimator, TransformerMixin
 import joblib
 import pandas as pd
+
+import spacy
 
 class ToDataFrame(BaseEstimator, TransformerMixin):
     def __init__(self, file_path=None):
@@ -154,16 +155,19 @@ class Predictions(BaseEstimator, TransformerMixin):
         predictions = self.model.predict(X)
         
         # Ensure to pass Z to predict_proba
-        probabilidad = self.model.predict_proba(X)
+        probabilidad = self.model.predict_proba(X).max(axis=1)
+
         
         # Create a copy of the DataFrame to avoid modifying the original one
         Z_copy = Z.copy()
         
         # Add predictions to the DataFrame
         Z_copy['sdg'] = predictions
+        print("Predicciones añadidas")
+        Z_copy['probabilidad'] = probabilidad
         Z_copy.drop(columns=['texto_preprocesado', 'procesado', 'tokens', 'lemmas', 'lemmas_sin_stopwords', 'lemmas_limpios'], inplace=True)
         
-        return Z_copy, probabilidad
+        return Z_copy
 
 
-# hacer class Analiticas(BaseEstimator, TransformerMixin):
+
