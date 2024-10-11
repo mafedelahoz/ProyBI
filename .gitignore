@@ -1,0 +1,75 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.env/
+env/
+ENV/
+
+# FastAPI + Uvicorn related
+*.log
+*.pid
+*.sqlite3
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Pytest cache
+.pytest_cache/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Unit test / coverage reports
+*.cover
+.tox/
+.nox/
+
+# Editor-specific directories (VSCode, PyCharm)
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Docker-related files (if using Docker with FastAPI/Uvicorn)
+docker-compose.override.yml
+.dockerignore
+
+# Jupyter notebooks checkpoints (if you're using Jupyter for testing/experimentation)
+.ipynb_checkpoints
+
+# Pipenv (if using it for package management)
+Pipfile.lock
+
+# Poetry (if using it for package management)
+poetry.lock
+
+# Logs
+*.log
+
+# SQLite databases (if you're using SQLite for a simple database in your FastAPI app)
+*.sqlite3
+
+# Uvicorn PID files (if Uvicorn is run with process management)
+*.pid
