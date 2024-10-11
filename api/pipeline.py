@@ -4,8 +4,8 @@ from sklearn.pipeline import Pipeline
 from Classes import ToDataFrame, ProcessText, Tokenization, Lemmatization, StopWordDeletion, SpecialCharacterFilter, FinalText, Predictions
 
 # Modify this function to accept the file path as an argument
-def create_pipeline(file_path):
-    to_dataframe_transformer = ToDataFrame(file_path=file_path)
+def create_pipeline(file_path_external):
+    to_dataframe_transformer = ToDataFrame(file_path=file_path_external)
 
     loaded_vectorizer = joblib.load('tfidf_vectorizer.pkl')
     loaded_model = joblib.load('model.pkl')

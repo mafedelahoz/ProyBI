@@ -1,14 +1,12 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
-from pipeline import load_pipeline, predict
+from pipeline import create_pipeline
+import pandas as pd
 
 
 # Initialize FastAPI
 app = FastAPI()
 
-prediction_model = 
-# Load the pipeline (which includes the prediction model)
-pipeline = load_pipeline()
 
 # Define the input format
 class DataInput(BaseModel):
@@ -16,11 +14,20 @@ class DataInput(BaseModel):
 
 # Define the prediction endpoint
 @app.post("/predict/")
-def get_prediction(data: DataInput):
+def predict(data: DataInput, file_path: str = Query(...)):
     try:
-        # Make prediction using the full pipeline
-        prediction = predict(data.features, pipeline)
-        return {"prediction": prediction.tolist()}  # Convert numpy array to list
+        # Create pipeline with the provided file path
+        pipeline = create_pipeline(file_path)
+        
+        # Prepare input data as a DataFrame
+
+        # Make predictions using the pipeline
+        prediction, probability = pipeline.predict([])
+
+        return {
+            "prediction": prediction.tolist(),
+            "probability": probability.tolist()
+        }
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error processing data: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
