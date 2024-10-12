@@ -13,13 +13,13 @@ function App() {
     setSelectedFile(event.target.files[0]);
   };
 
-  // Subir el archivo y obtener predicciones
   const onFileUpload = async () => {
     const formData = new FormData();
     formData.append("file", selectedFile);
 
     try {
-      const response = await axios.post("http://localhost:8000/uploadfile/", formData, {
+      // Cambia la URL a la que apunta la solicitud
+      const response = await axios.post("http://localhost:8000/predict/", formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -28,8 +28,7 @@ function App() {
     } catch (error) {
       console.error("Error uploading the file:", error);
     }
-  };
-
+};
   // Clasificar texto
   const classifyText = async () => {
     try {
