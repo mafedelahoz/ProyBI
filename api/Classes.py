@@ -174,33 +174,27 @@ class Predictions(BaseEstimator, TransformerMixin):
         
         return Z_copy
 
-# class Retrain(BaseEstimator, TransformerMixin):
-#     def __init__(self, model, vectorizer):
-#         self.model = model
-#         self.vectorizer = vectorizer
+class Retrain(BaseEstimator, TransformerMixin):
+    def __init__(self, model, vectorizer):
+        self.model = model
+        self.vectorizer = vectorizer
 
-#     def fit(self, Z, y=None):
-#         # This transformer does not need to learn anything
-#         return self
+    def fit(self, Z, y=None):
+        # This transformer does not need to learn anything
+        return self
 
-#     def retrain(self, Z):
-#         # Ensure predictions is a 1D array and matches the number of rows in X
-#         X = self.vectorizer.fit_transform(Z['texto_preprocesado']).toarray()
-#         #TODO: añadir split train_test, y hacer train-test
-#         predictions = self.model.predict(X)
-        
-#         # Ensure to pass Z to predict_proba
-#         probabilidad = self.model.predict_proba(X).max(axis=1)
+    def retrain(self, Z):
+        # Ensure predictions is a 1D array and matches the number of rows in X
+        X = self.vectorizer.fit_transform(Z['texto_preprocesado']).toarray()
+        Y = Z["sdg"]
 
+        x_train, x_validation, y_train, y_validation = train_test_split(X, Y, test_size=0.3, random_state=10)
+        self.model.fit(x_train, y_train)
         
-#         # Create a copy of the DataFrame to avoid modifying the original one
-#         Z_copy = Z.copy()
+        # analíticas del modelo
+        y_pred = self.model.predict(x_validation)
+        accuracy = accuracy_score(y_validation, y_pred)
+        joblib.dump(self.model, 'model.pkl')
         
-#         # Add predictions to the DataFrame
-#         Z_copy['sdg'] = predictions
-#         print("Predicciones añadidas")
-#         Z_copy['probabilidad'] = probabilidad
-#         Z_copy.drop(columns=['texto_preprocesado', 'procesado', 'tokens', 'lemmas', 'lemmas_sin_stopwords', 'lemmas_limpios'], inplace=True)
-        
-#         return Z_copy
+        return accuracy
 
