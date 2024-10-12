@@ -192,21 +192,21 @@ class Retrain(BaseEstimator, TransformerMixin):
             # Devuelve el propio objeto (comportamiento estándar)
             return self
 
-    def retrain(self, Z):
+    def retrain(self):
             # Ajusta y devuelve la métrica de precisión (accuracy)
             X = self.vectorizer.fit_transform(self.Z['texto_preprocesado']).toarray()
             Y = self.Z["sdg"]
-            
+
             x_train, x_validation, y_train, y_validation = train_test_split(X, Y, test_size=0.3, random_state=10)
             self.model.fit(x_train, y_train)
             
             # Predicciones y cálculo de la precisión
             y_pred = self.model.predict(x_validation)
-            accuracy = accuracy_score(y_validation, y_pred)
+            report = classification_report(y_validation, y_pred, output_dict=True)
             
             # Guardar el modelo entrenado
             joblib.dump(self.model, 'model.pkl')
 
             # Devolver la precisión
-            return accuracy
+            return report
 

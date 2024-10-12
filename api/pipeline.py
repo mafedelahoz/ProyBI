@@ -23,11 +23,9 @@ def create_pipeline(file_path_external):
 
     return pipeline
 
-def retrain(file_path_external):
-    to_dataframe_transformer = ToDataFrame(file_path=file_path_external)
+def retrain():
 
     pipeline = Pipeline([
-        ("crear_dataframe", to_dataframe_transformer),
         ("procesamiento_texto", ProcessText(column="Textos_espanol")),
         ("tokenizacion", Tokenization(column='procesado')),
         ("lematizacion", Lemmatization(column='procesado')),
