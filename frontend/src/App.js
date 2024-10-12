@@ -7,11 +7,17 @@ function App() {
   const [inputText, setInputText] = useState("");
   const [textPrediction, setTextPrediction] = useState(null);
   const [retrainMessage, setRetrainMessage] = useState("");
-  const [serverResponse, setServerResponse] = useState(null); // Nuevo estado para almacenar la respuesta del servidor
+  const [serverResponse, setServerResponse] = useState(null);
+  const [trainingFile, setTrainingFile] = useState(null); // Nuevo estado para el archivo de entrenamiento
 
-  // Manejar el archivo seleccionado
+  // Manejar el archivo seleccionado para predicciones
   const onFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
+  };
+
+  // Manejar el archivo seleccionado para reentrenamiento
+  const onTrainingFileChange = (event) => {
+    setTrainingFile(event.target.files[0]);
   };
 
   const onFileUpload = async () => {
@@ -19,16 +25,13 @@ function App() {
     formData.append("file", selectedFile);
 
     try {
-      // Cambia la URL a la que apunta la solicitud
       const response = await axios.post("http://localhost:8000/predict/", formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
-      console.log("Response data:", response);
       setPredictions(response.data.predictions);
-      setServerResponse(response.data); // Almacenar la respuesta del servidor
-      console.log("Response data:", response.data);
+      setServerResponse(response.data);
     } catch (error) {
       console.error("Error uploading the file:", error);
     }
@@ -39,8 +42,8 @@ function App() {
     try {
       const jsonData = [
         {
-          "Textos_espanol": inputText,  // El texto ingresado por el usuario
-          "sdg": 1                      // Valor fijo de sdg
+          "Textos_espanol": inputText,
+          "sdg": 1
         }
       ];
 
@@ -51,20 +54,28 @@ function App() {
       });
 
       setTextPrediction(response.data.prediction);
-      setServerResponse(response.data); // Almacenar la respuesta del servidor
+      setServerResponse(response.data);
     } catch (error) {
       console.error("Error classifying the text:", error);
     }
   };
 
-  // Reentrenar el modelo
-  const retrainModel = async () => {
+  // Nueva función para reentrenar el modelo con un archivo de datos de entrenamiento
+  const uploadTrainingFile = async () => {
+    const formData = new FormData();
+    formData.append("file", trainingFile);
+
     try {
-      const response = await axios.post("http://localhost:8000/retrain-model/");
+      const response = await axios.post("http://localhost:8000/retrain-model/", formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
       setRetrainMessage(response.data.message);
-      setServerResponse(response.data); // Almacenar la respuesta del servidor
+      setServerResponse(response.data);
     } catch (error) {
-      console.error("Error re-training the model:", error);
+      console.error("Error uploading the training file:", error);
     }
   };
 
@@ -72,34 +83,26 @@ function App() {
   const enviarJsonComoArchivo = async () => {
     const jsonData = [
       {
-        "Textos_espanol": inputText,  // El texto ingresado por el usuario
-        "sdg": 1                      // Valor fijo de sdg
+        "Textos_espanol": inputText,
+        "sdg": 1
       }
     ];
 
     try {
-      // Convertir el objeto JSON en una cadena de texto
       const jsonString = JSON.stringify(jsonData);
-
-      // Crear un Blob con el contenido del JSON y el tipo de archivo
       const blob = new Blob([jsonString], { type: 'application/json' });
 
-      // Crear un FormData para enviar el archivo al backend
       const formData = new FormData();
       formData.append("file", blob, "data.json");
 
-      // Hacer la solicitud POST enviando el archivo .json
       const response = await axios.post("http://localhost:8000/predict/", formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
 
-      // Manejar la respuesta del API
-      console.log("Respuesta del servidor:", response.data);
       setPredictions(response.data.predictions);
-      setServerResponse(response.data); // Almacenar la respuesta del servidor
-
+      setServerResponse(response.data);
     } catch (error) {
       console.error("Error al enviar el archivo .json:", error);
     }
@@ -139,7 +142,8 @@ function App() {
       <hr />
 
       <h1>Reentrenar el Modelo</h1>
-      <button onClick={retrainModel}>Reentrenar Modelo</button>
+      <input type="file" onChange={onTrainingFileChange} />
+      <button onClick={uploadTrainingFile}>Subir Archivo de Entrenamiento y Reentrenar</button>
 
       {retrainMessage && (
         <div>
@@ -153,7 +157,13 @@ function App() {
       {serverResponse && (
         <div>
           <h2>Respuesta del Servidor:</h2>
-          <pre>{JSON.stringify(serverResponse, null, 2)}</pre>
+          {serverResponse.map((item, index) => (
+            <div key={index} style={{ border: '1px solid #ccc', padding: '10px', margin: '10px 0' }}>
+              <p><strong>Texto en Español:</strong> {item.Textos_espanol}</p>
+              <p><strong>SDG:</strong> {item.sdg}</p>
+              <p><strong>Probabilidad:</strong> {item.probabilidad.toFixed(2)}</p>
+            </div>
+          ))}
         </div>
       )}
     </div>
