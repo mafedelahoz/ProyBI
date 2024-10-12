@@ -1,5 +1,6 @@
 from fastapi import FastAPI, File, UploadFile, Query, HTTPException
 from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pipeline import create_pipeline, retrain
 import pandas as pd
@@ -14,6 +15,14 @@ from Classes import ToDataFrame, ProcessText, Tokenization, Lemmatization, StopW
 
 # Initialize FastAPI
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Permitir todos los orígenes
+    allow_credentials=True,
+    allow_methods=["*"],  # Permitir todos los métodos HTTP (GET, POST, etc.)
+    allow_headers=["*"],  # Permitir todos los encabezados
+)
 
 @app.post("/")
 def read_root():
