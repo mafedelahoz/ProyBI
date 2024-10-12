@@ -175,27 +175,38 @@ class Predictions(BaseEstimator, TransformerMixin):
         return Z_copy
 
 class Retrain(BaseEstimator, TransformerMixin):
-    def __init__(self, model, vectorizer):
+    def __init__(self, model, vectorizer, Z):
         self.model = model
         self.vectorizer = vectorizer
+        self.Z = Z
 
     def fit(self, Z, y=None):
-        # This transformer does not need to learn anything
-        return self
+            # Aquí no devuelvas accuracy, solo ajusta el modelo
+            X = self.vectorizer.fit_transform(self.Z['texto_preprocesado']).toarray()
+            Y = self.Z["sdg"]
+            x_train, x_validation, y_train, y_validation = train_test_split(X, Y, test_size=0.3, random_state=10)
 
-    def retrain(self, Z):
-        # Ensure predictions is a 1D array and matches the number of rows in X
-        X = self.vectorizer.fit_transform(Z['texto_preprocesado']).toarray()
-        Y = Z["sdg"]
+            # Ajusta el modelo
+            self.model.fit(x_train, y_train)
+            
+            # Devuelve el propio objeto (comportamiento estándar)
+            return self
 
-        x_train, x_validation, y_train, y_validation = train_test_split(X, Y, test_size=0.3, random_state=10)
-        self.model.fit(x_train, y_train)
-        
-        # analíticas del modelo
-        y_pred = self.model.predict(x_validation)
-        accuracy = accuracy_score(y_validation, y_pred)
-        print(accuracy)
-        joblib.dump(self.model, 'model.pkl')
-        
-        return accuracy
+    def retrain(self):
+            # Ajusta y devuelve la métrica de precisión (accuracy)
+            X = self.vectorizer.fit_transform(self.Z['texto_preprocesado']).toarray()
+            Y = self.Z["sdg"]
+
+            x_train, x_validation, y_train, y_validation = train_test_split(X, Y, test_size=0.3, random_state=10)
+            self.model.fit(x_train, y_train)
+            
+            # Predicciones y cálculo de la precisión
+            y_pred = self.model.predict(x_validation)
+            report = classification_report(y_validation, y_pred, output_dict=True)
+            
+            # Guardar el modelo entrenado
+            joblib.dump(self.model, 'model.pkl')
+
+            # Devolver la precisión
+            return report
 

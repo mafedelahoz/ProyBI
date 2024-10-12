@@ -9,7 +9,7 @@ import os
 import json
 # from backend.model import ToDataFrame
 import joblib
-from Classes import ToDataFrame, ProcessText, Tokenization, Lemmatization, StopWordDeletion, SpecialCharacterFilter, FinalText, Predictions
+from Classes import ToDataFrame, ProcessText, Tokenization, Lemmatization, StopWordDeletion, SpecialCharacterFilter, FinalText, Predictions, Retrain
 
 
 # Initialize FastAPI
@@ -74,12 +74,32 @@ async def reentrenar_modelo_con_archivo(file: UploadFile = File(...)):
             f.write(await file.read())
         
         # Crear el pipeline con la ruta del archivo
-        pipeline = retrain(file_location)
+        if file_location.endswith(".csv"):
+            dataframe = pd.read_csv(file_location)
+            print("Data read as CSV")
+        elif file_location.endswith(".xlsx"):
+            dataframe = pd.read_excel(file_location)
+            print("Data read as Excel")
+        elif file_location.endswith(".json"):
+            dataframe = pd.read_json(file_location)
+            print("Data read as JSON")
+        else:
+            raise HTTPException(status_code=400, detail="Unsupported file format")
+        
+        pipeline = retrain()
+        ZUso = pipeline.transform(dataframe)
         print("Pipeline loaded successfully.")
         
         # Make predictions using the pipeline
-        accuracy = pipeline.fit([])
-        return JSONResponse(content=accuracy.to_dict(orient="records"))
+        loaded_vectorizer = joblib.load('tfidf_vectorizer.pkl')
+        loaded_model = joblib.load('model.pkl')
+        # Crear una instancia de la clase Retrain con el modelo, vectorizador y datos
+        retrain_instance = Retrain(model=loaded_model, vectorizer=loaded_vectorizer, Z=ZUso)
+
+        # Reentrenar el modelo y obtener la precisión
+        accuracy = retrain_instance.retrain()
+        return JSONResponse(content={"Classification report": accuracy})
+
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
