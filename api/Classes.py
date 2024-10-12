@@ -14,11 +14,12 @@ import pandas as pd
 import spacy
 
 class ToDataFrame(BaseEstimator, TransformerMixin):
-    def __init__(self, file_path=None):
+    def __init__(self, file_path=None, data_dict=None):
         """
-        Initializes the class with an optional file path.
+        Initializes the class with an optional file path or data dictionary.
         """
         self.file_path = file_path  # Store the file path in the class instance
+        self.data_dict = data_dict  # Store the data dictionary in the class instance
 
     def fit(self, X=None, y=None):
         """
@@ -28,16 +29,20 @@ class ToDataFrame(BaseEstimator, TransformerMixin):
 
     def transform(self, X=None, y=None):
         """
-        Reads the file from the given file path and transforms it into a DataFrame.
-        If the file_path is already a DataFrame, return it directly.
+        Reads the file from the given file path or uses the provided data dictionary
+        and transforms it into a DataFrame.
         """
         # If X is already a DataFrame, return it as is
-        if isinstance(self.file_path, pd.DataFrame):
-            return self.file_path
+        if isinstance(X, pd.DataFrame):
+            return X
+
+        # If data_dict is provided, create DataFrame from it
+        if self.data_dict is not None:
+            return pd.DataFrame([self.data_dict])  # Wrap the dict in a list
 
         # Check if file_path is set
         if not self.file_path:
-            raise ValueError("No file path provided for ToDataFrame transformer.")
+            raise ValueError("No file path or data dictionary provided for ToDataFrame transformer.")
         
         # Try reading the input data from the file path
         try:
@@ -151,7 +156,7 @@ class Predictions(BaseEstimator, TransformerMixin):
 
     def predict(self, Z):
         # Ensure predictions is a 1D array and matches the number of rows in X
-        X = self.vectorizer.fit_transform(Z['texto_preprocesado']).toarray()
+        X = self.vectorizer.transform(Z['texto_preprocesado']).toarray()
         predictions = self.model.predict(X)
         
         # Ensure to pass Z to predict_proba
@@ -169,5 +174,33 @@ class Predictions(BaseEstimator, TransformerMixin):
         
         return Z_copy
 
+# class Retrain(BaseEstimator, TransformerMixin):
+#     def __init__(self, model, vectorizer):
+#         self.model = model
+#         self.vectorizer = vectorizer
 
+#     def fit(self, Z, y=None):
+#         # This transformer does not need to learn anything
+#         return self
+
+#     def retrain(self, Z):
+#         # Ensure predictions is a 1D array and matches the number of rows in X
+#         X = self.vectorizer.fit_transform(Z['texto_preprocesado']).toarray()
+#         #TODO: añadir split train_test, y hacer train-test
+#         predictions = self.model.predict(X)
+        
+#         # Ensure to pass Z to predict_proba
+#         probabilidad = self.model.predict_proba(X).max(axis=1)
+
+        
+#         # Create a copy of the DataFrame to avoid modifying the original one
+#         Z_copy = Z.copy()
+        
+#         # Add predictions to the DataFrame
+#         Z_copy['sdg'] = predictions
+#         print("Predicciones añadidas")
+#         Z_copy['probabilidad'] = probabilidad
+#         Z_copy.drop(columns=['texto_preprocesado', 'procesado', 'tokens', 'lemmas', 'lemmas_sin_stopwords', 'lemmas_limpios'], inplace=True)
+        
+#         return Z_copy
 
