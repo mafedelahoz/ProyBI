@@ -9,7 +9,7 @@ import os
 import json
 # from backend.model import ToDataFrame
 import joblib
-from Classes import ToDataFrame, ProcessText, Tokenization, Lemmatization, StopWordDeletion, SpecialCharacterFilter, FinalText, Predictions
+from Classes import ToDataFrame, ProcessText, Tokenization, Lemmatization, StopWordDeletion, SpecialCharacterFilter, FinalText, Predictions, Retrain
 
 
 # Initialize FastAPI
@@ -75,11 +75,15 @@ async def reentrenar_modelo_con_archivo(file: UploadFile = File(...)):
         
         # Crear el pipeline con la ruta del archivo
         pipeline = retrain(file_location)
+        Z = pipeline.transform()
         print("Pipeline loaded successfully.")
         
         # Make predictions using the pipeline
-        accuracy = pipeline.fit([])
-        return JSONResponse(content=accuracy.to_dict(orient="records"))
+        loaded_vectorizer = joblib.load('tfidf_vectorizer.pkl')
+        loaded_model = joblib.load('model.pkl')
+        accuracy = Retrain(model=loaded_model, vectorizer=loaded_vectorizer)
+        return JSONResponse(content={"accuracy": accuracy})
+
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
