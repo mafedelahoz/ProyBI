@@ -24,15 +24,33 @@ function App() {
           'Content-Type': 'multipart/form-data'
         }
       });
-      setPredictions(response.data.predictions);
+    console.log("Response data:", response);
+    setPredictions(response.data.predictions);
+    console.log("Response data:", response.data);
     } catch (error) {
       console.error("Error uploading the file:", error);
     }
+    return (
+      <div className="App">
+        <h1>Cargar archivo para predicciones</h1>
+        <input type="file" onChange={onFileChange} />
+        <button onClick={onFileUpload}>Subir Archivo y Obtener Predicciones</button>
+  
+        {predictions && (
+          <div>
+            <h2>Resultados de las predicciones:</h2>
+            <pre>{JSON.stringify(predictions, null, 2)}</pre>  {/* Mostrar las predicciones en formato JSON */}
+          </div>
+        )}
+      </div>
+    );
+  
+
 };
   // Clasificar texto
   const classifyText = async () => {
     try {
-      const response = await axios.post("http://localhost:8000/classify-text/", {
+      const response = await axios.post("http://localhost:8000/predict/", {
         text: inputText
       });
       setTextPrediction(response.data.prediction);
