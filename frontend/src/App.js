@@ -7,6 +7,7 @@ function App() {
   const [inputText, setInputText] = useState("");
   const [textPrediction, setTextPrediction] = useState(null);
   const [retrainMessage, setRetrainMessage] = useState("");
+  const [serverResponse, setServerResponse] = useState(null); // Nuevo estado para almacenar la respuesta del servidor
 
   // Manejar el archivo seleccionado
   const onFileChange = (event) => {
@@ -24,36 +25,33 @@ function App() {
           'Content-Type': 'multipart/form-data'
         }
       });
-    console.log("Response data:", response);
-    setPredictions(response.data.predictions);
-    console.log("Response data:", response.data);
+      console.log("Response data:", response);
+      setPredictions(response.data.predictions);
+      setServerResponse(response.data); // Almacenar la respuesta del servidor
+      console.log("Response data:", response.data);
     } catch (error) {
       console.error("Error uploading the file:", error);
     }
-    return (
-      <div className="App">
-        <h1>Cargar archivo para predicciones</h1>
-        <input type="file" onChange={onFileChange} />
-        <button onClick={onFileUpload}>Subir Archivo y Obtener Predicciones</button>
-  
-        {predictions && (
-          <div>
-            <h2>Resultados de las predicciones:</h2>
-            <pre>{JSON.stringify(predictions, null, 2)}</pre>  {/* Mostrar las predicciones en formato JSON */}
-          </div>
-        )}
-      </div>
-    );
-  
+  };
 
-};
   // Clasificar texto
   const classifyText = async () => {
     try {
-      const response = await axios.post("http://localhost:8000/predict/", {
-        text: inputText
+      const jsonData = [
+        {
+          "Textos_espanol": inputText,  // El texto ingresado por el usuario
+          "sdg": 1                      // Valor fijo de sdg
+        }
+      ];
+
+      const response = await axios.post("http://localhost:8000/predict/", jsonData, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
+
       setTextPrediction(response.data.prediction);
+      setServerResponse(response.data); // Almacenar la respuesta del servidor
     } catch (error) {
       console.error("Error classifying the text:", error);
     }
@@ -64,8 +62,46 @@ function App() {
     try {
       const response = await axios.post("http://localhost:8000/retrain-model/");
       setRetrainMessage(response.data.message);
+      setServerResponse(response.data); // Almacenar la respuesta del servidor
     } catch (error) {
       console.error("Error re-training the model:", error);
+    }
+  };
+
+  // Nueva función para enviar el JSON como archivo .json
+  const enviarJsonComoArchivo = async () => {
+    const jsonData = [
+      {
+        "Textos_espanol": inputText,  // El texto ingresado por el usuario
+        "sdg": 1                      // Valor fijo de sdg
+      }
+    ];
+
+    try {
+      // Convertir el objeto JSON en una cadena de texto
+      const jsonString = JSON.stringify(jsonData);
+
+      // Crear un Blob con el contenido del JSON y el tipo de archivo
+      const blob = new Blob([jsonString], { type: 'application/json' });
+
+      // Crear un FormData para enviar el archivo al backend
+      const formData = new FormData();
+      formData.append("file", blob, "data.json");
+
+      // Hacer la solicitud POST enviando el archivo .json
+      const response = await axios.post("http://localhost:8000/predict/", formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      // Manejar la respuesta del API
+      console.log("Respuesta del servidor:", response.data);
+      setPredictions(response.data.predictions);
+      setServerResponse(response.data); // Almacenar la respuesta del servidor
+
+    } catch (error) {
+      console.error("Error al enviar el archivo .json:", error);
     }
   };
 
@@ -91,7 +127,7 @@ function App() {
         onChange={(e) => setInputText(e.target.value)} 
         placeholder="Escribe un texto aquí" 
       />
-      <button onClick={classifyText}>Clasificar Texto</button>
+      <button onClick={enviarJsonComoArchivo}>Clasificar texto</button>
 
       {textPrediction && (
         <div>
@@ -109,6 +145,15 @@ function App() {
         <div>
           <h2>Mensaje del reentrenamiento:</h2>
           <p>{retrainMessage}</p>
+        </div>
+      )}
+
+      <hr />
+
+      {serverResponse && (
+        <div>
+          <h2>Respuesta del Servidor:</h2>
+          <pre>{JSON.stringify(serverResponse, null, 2)}</pre>
         </div>
       )}
     </div>
