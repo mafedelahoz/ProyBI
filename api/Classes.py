@@ -194,6 +194,7 @@ class Retrain(BaseEstimator, TransformerMixin):
         # analíticas del modelo
         y_pred = self.model.predict(x_validation)
         accuracy = accuracy_score(y_validation, y_pred)
+        print(accuracy)
         joblib.dump(self.model, 'model.pkl')
         
         return accuracy
